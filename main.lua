@@ -1,12 +1,27 @@
 local shell = os.getenv("SHELL"):match(".*/(.*)")
 
+local bar =
+	[[\x1b[2m────────────────────────────────────────────────────────────────────────────────\x1b[m\n]]
 local bat_prev = "bat --color=always --style=snip,grid,header"
-local eza_prev = "eza --color=always --group-directories-first --icons --oneline"
+local long_flag = " --git --git-repos --header --long --mounts --no-user --octal-permissions --total-size"
+local eza_cmd = "eza --color=always --group-directories-first --icons" .. long_flag
+local eza_prev = {
+	fish = "begin; " .. [[echo -e "]] .. bar .. [[Dir: \x1b[1m\x1b[38m{}\x1b[m\n]] .. bar .. [["; ]] .. eza_cmd,
+}
 local fzf_cmd = "fzf --reverse --no-multi --preview-window=up,60%"
-local preview = " --preview='test -d {} && " .. eza_prev .. " {} || " .. bat_prev .. " {}'"
+local preview = " --preview='test -d {} && "
+	.. eza_prev[shell]
+	.. " {}; "
+	.. [[echo -e "]]
+	.. bar
+	.. [[";]]
+	.. " end"
+	.. " || "
+	.. bat_prev
+	.. " {}'"
 local fd_table = {
 	default = "(fd --type d; fd --type f)",
-	fish = "begin; fd --type d; fd --type f; end",
+	fish = "begin; echo ../; echo .; fd --type d; fd --type f; end",
 }
 local fd_cmd = fd_table[shell] or fd_table.default
 local cmd_args = fd_cmd .. " | " .. fzf_cmd .. preview
