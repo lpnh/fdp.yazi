@@ -1,20 +1,21 @@
 local shell = os.getenv("SHELL"):match(".*/(.*)")
 
 local bar =
-	[[\x1b[2m────────────────────────────────────────────────────────────────────────────────\x1b[m\n]]
+	[[echo -e "\x1b[38;2;148;130;158m────────────────────────────────────────────────────────────────────────────────\x1b[m";]]
+local bar_s =
+	[[echo -e "\n\x1b[38;2;148;130;158m────────────────────────────────────────────────────────────────────────────────\x1b[m";]]
 local bat_prev = "bat --color=always --style=snip,grid,header"
 local long_flag = " --git --git-repos --header --long --mounts --no-user --octal-permissions --total-size"
+local is_empty_dir = [[test -z "$(eza -A {})" && echo -ne "  <EMPTY>\n" || ]]
 local eza_cmd = "eza --color=always --group-directories-first --icons" .. long_flag
 local eza_prev = {
-	fish = "begin; " .. [[echo -e "]] .. bar .. [[Dir: \x1b[1m\x1b[38m{}\x1b[m\n]] .. bar .. [["; ]] .. eza_cmd,
+	fish = "begin; " .. bar .. [[echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m";]] .. is_empty_dir .. bar_s .. [[ ]] .. eza_cmd,
 }
 local fzf_cmd = "fzf --reverse --no-multi --preview-window=up,60%"
 local preview = " --preview='test -d {} && "
 	.. eza_prev[shell]
 	.. " {}; "
-	.. [[echo -e "]]
 	.. bar
-	.. [[";]]
 	.. " end"
 	.. " || "
 	.. bat_prev
