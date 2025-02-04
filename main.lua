@@ -2,29 +2,23 @@ local shell = os.getenv("SHELL"):match(".*/(.*)")
 
 local bar =
 	[[echo -e "\x1b[38;2;148;130;158m────────────────────────────────────────────────────────────────────────────────\x1b[m";]]
-local bar_s =
+local bar_n =
 	[[echo -e "\n\x1b[38;2;148;130;158m────────────────────────────────────────────────────────────────────────────────\x1b[m";]]
-local bat_prev = "bat --color=always --style=snip,grid,header"
+local bat_prev = "bat --color=always --style=snip,grid,header {}'"
 local long_flag = " --git --git-repos --header --long --mounts --no-user --octal-permissions --total-size"
+local dir_name = [[echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m";]]
 local is_empty_dir = [[test -z "$(eza -A {})" && echo -ne "  <EMPTY>\n" || ]]
-local eza_cmd = "eza --color=always --group-directories-first --icons" .. long_flag
-local eza_prev = {
-	fish = "begin; " .. bar .. [[echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m";]] .. is_empty_dir .. bar_s .. [[ ]] .. eza_cmd,
+local eza_cmd = "eza --color=always --group-directories-first --icons" .. long_flag .. " {}; "
+local eza_tbl = {
+	fish = "begin; " .. bar .. dir_name .. is_empty_dir .. bar_n .. " " .. eza_cmd .. bar .. " end",
 }
 local fzf_cmd = "fzf --reverse --no-multi --preview-window=up,60%"
-local preview = " --preview='test -d {} && "
-	.. eza_prev[shell]
-	.. " {}; "
-	.. bar
-	.. " end"
-	.. " || "
-	.. bat_prev
-	.. " {}'"
-local fd_table = {
+local preview = " --preview='test -d {} && " .. eza_tbl[shell] .. " || " .. bat_prev
+local fd_tbl = {
 	default = "(fd --type d; fd --type f)",
 	fish = "begin; echo ../; echo .; fd --type d; fd --type f; end",
 }
-local fd_cmd = fd_table[shell] or fd_table.default
+local fd_cmd = fd_tbl[shell] or fd_tbl.default
 local cmd_args = fd_cmd .. " | " .. fzf_cmd .. preview
 
 local fail = function(s, ...) ya.notify { title = "fdp", content = string.format(s, ...), timeout = 5, level = "error" } end
