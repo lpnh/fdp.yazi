@@ -3,16 +3,17 @@
 > [!NOTE]
 > this plugin is only guaranteed to be compatible with Yazi nightly
 
-a Yazi plugin that integrates `fzf` to enhance `fd` with an `eza` preview for directories and a `bat` preview for files. essentially, `fd` with preview
+a Yazi plugin that adds the `fzf` interface to `fd` with `eza` preview for
+directories and `bat` preview for files
 
 **supports**: `bash`, `fish`, and `zsh`
 
 ## dependencies
 
-- `bat`
-- `fd`
-- `fzf`
-- `eza`
+- [bat](https://github.com/sharkdp/bat)
+- [fd](https://github.com/sharkdp/fd)
+- [fzf](https://junegunn.github.io/fzf/)
+- [eza](https://eza.rocks/)
 
 ## installation
 
