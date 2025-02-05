@@ -54,6 +54,9 @@ run = "plugin fdp --args='file'"
 desc = "fd with preview (files only)"
 ```
 
+**bonus:** `<ctrl-space>` switches the preview to display metadata from `eza`
+for the selected entry
+
 ## acknowledgments
 
 @prosoitos for the [inspiration](https://github.com/sxyazi/yazi/discussions/2273)
