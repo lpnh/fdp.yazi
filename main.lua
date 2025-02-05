@@ -14,20 +14,27 @@ local eza_tbl = {
 }
 local fzf_cmd = "fzf --reverse --no-multi --preview-window=up,60%"
 local preview = " --preview='test -d {} && " .. eza_tbl[shell] .. " || " .. bat_prev
-local fd_tbl = {
-	default = "(fd --type d; fd --type f)",
+local fd_all_tbl = {
+	default = "(fd --type=d; fd --type=f)",
 	fish = "begin; echo ../; echo .; fd --type d; fd --type f; end",
 }
-local fd_cmd = fd_tbl[shell] or fd_tbl.default
-local cmd_args = fd_cmd .. " | " .. fzf_cmd .. preview
+local fd_all = fd_all_tbl[shell] or fd_all_tbl.default
+local fd_cmd_from = {
+	all = fd_all,
+	cwd = "fd --max-depth=1",
+	dir = "fd --type=d",
+	file = "fd --type=f",
+}
 
 local fail = function(s, ...) ya.notify { title = "fdp", content = string.format(s, ...), timeout = 5, level = "error" } end
 
-local function entry(_)
+local function entry(_, job)
 	local _permit = ya.hide()
+	local fd_cmd = fd_cmd_from[job.args[1]]
+	local args = fd_cmd .. " | " .. fzf_cmd .. preview
 
 	local child, err =
-		Command(shell):args({ "-c", cmd_args }):stdin(Command.INHERIT):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
+		Command(shell):args({ "-c", args }):stdin(Command.INHERIT):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
 
 	if not child then
 		return fail("Command failed with error code %s.", err)

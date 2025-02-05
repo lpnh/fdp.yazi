@@ -23,13 +23,35 @@ ya pack -a lpnh/fdp
 
 ## usage
 
-add this to your `~/.config/yazi/keymap.toml`:
+there are four different arguments available for this plugin
+
+- `cwd`: limits the search to the current directory
+- `all`: searches for both files and directories, adding `..` and `.` to the selection
+- `dir`: searches for directories only
+- `file`: searches for files only
+
+here's an example of how to set them in the `~/.config/yazi/keymap.toml` file:
 
 ```toml
 [[manager.prepend_keymap]]
+on = ["f", "a"]
+run = "plugin fdp --args='all'"
+desc = "fd with preview (all)"
+
+[[manager.prepend_keymap]]
+on = ["f", "c"]
+run = "plugin fdp --args='cwd'"
+desc = "fd with preview (CWD only)"
+
+[[manager.prepend_keymap]]
 on = ["f", "d"]
-run = "plugin fdp"
-desc = "fd with preview"
+run = "plugin fdp --args='dir'"
+desc = "fd with preview (dirs only)"
+
+[[manager.prepend_keymap]]
+on = ["f", "f"]
+run = "plugin fdp --args='file'"
+desc = "fd with preview (files only)"
 ```
 
 ## acknowledgments
