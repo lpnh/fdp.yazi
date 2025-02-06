@@ -3,8 +3,7 @@
 > [!NOTE]
 > this plugin is only guaranteed to be compatible with Yazi nightly
 
-a Yazi plugin that adds the `fzf` interface to `fd` with `eza` preview for
-directories and `bat` preview for files
+a Yazi plugin that integrates `fzf` and `fd` with `eza` and `bat` previews
 
 **supports**: `bash`, `fish`, and `zsh`
 
