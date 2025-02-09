@@ -25,29 +25,64 @@ local eza_prev = eza_tbl[shell] or eza_tbl.default
 
 -- ctrl-space metadata preview
 local eza_list_dirs = "eza --list-dirs" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g"']]
-local eza_bind_prev = " --bind 'ctrl-space:preview:" .. bar .. echo_meta .. bar_n .. eza_list_dirs
+local eza_bind_prev = "--bind 'ctrl-space:preview:" .. bar .. echo_meta .. bar_n .. eza_list_dirs
 
 -- fzf
-local fzf_cmd = "fzf --reverse --no-multi --preview-window=up,60%"
-local preview = " --preview='test -d {} && " .. eza_prev .. " || " .. bat_prev
-local fd_all_tbl = {
-	default = [[(echo ../; echo ./; fd --type=d; fd --type=f)]],
-	fish = "begin; echo ../; echo .; fd --type=d; fd --type=f; end",
-}
-local fd_all = fd_all_tbl[shell] or fd_all_tbl.default
-local fd_cmd_from = {
-	all = fd_all,
-	cwd = "fd --max-depth=1",
-	dir = "fd --type=dir",
-	file = "fd --type=file",
-}
+local fzf_from = function(job_args)
+	local fd_all_tbl = {
+		default = [[(fd --type=d {q}; fd --type=f {q})]],
+		fish = "begin; fd --type=d {q}; fd --type=f {q}; end",
+	}
+	local fd_cwd_tbl = {
+		default = [[(fd --max-depth=1 --type=d {q}; fd --max-depth=1 --type=f {q})]],
+		fish = "begin; fd --max-depth=1 --type=d {q}; fd --max-depth=1 --type=f {q}; end",
+	}
+	local cmd_tbl = {
+		all = fd_all_tbl[shell] or fd_all_tbl.default,
+		cwd = fd_cwd_tbl[shell] or fd_cwd_tbl.default,
+		dir = "fd --type=dir {q}",
+		file = "fd --type=file {q}",
+	}
+	local fd_cmd = cmd_tbl[job_args]
+
+	local fzf_tbl = {
+		"fzf",
+		"--no-multi",
+		"--no-sort",
+		"--reverse",
+		"--prompt='fd> '",
+		"--preview-window=up,66%",
+		"--preview='test -d {} && " .. eza_prev .. " || " .. bat_prev,
+		string.format("--bind='start:reload:%s'", fd_cmd),
+		string.format("--bind='change:reload:sleep 0.1; %s || true'", fd_cmd),
+		"--bind='ctrl-w:change-preview-window(80%|66%)'",
+		"--bind='ctrl-\\:change-preview-window(right|up)'",
+		eza_bind_prev,
+		-- opts_tbl.fzf,
+	}
+
+	local extra = function(cmd)
+		local logic = {
+			default = { cond = "[[ ! $FZF_PROMPT =~ fd ]] &&", op = "||" },
+			fish = { cond = 'not string match -q "*fd*" $FZF_PROMPT; and', op = "; or" },
+		}
+		local lgc = logic[shell] or logic.default
+		local extra_bind = "--bind='ctrl-f:transform:%s "
+			.. [[echo "rebind(change)+change-prompt(fd> )+clear-query+reload:%s" %s ]]
+			.. [[echo "unbind(change)+change-prompt(fzf> )+clear-query"']]
+		return string.format(extra_bind, lgc.cond, cmd, lgc.op, cmd)
+	end
+
+	table.insert(fzf_tbl, extra(fd_cmd))
+
+	return table.concat(fzf_tbl, " ")
+end
 
 local fail = function(s, ...) ya.notify { title = "fdp", content = string.format(s, ...), timeout = 5, level = "error" } end
 
 local function entry(_, job)
 	local _permit = ya.hide()
-	local fd_cmd = fd_cmd_from[job.args[1]]
-	local args = fd_cmd .. " | " .. fzf_cmd .. preview .. eza_bind_prev
+	local args = fzf_from(job.args[1])
 
 	local child, err =
 		Command(shell):args({ "-c", args }):stdin(Command.INHERIT):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
