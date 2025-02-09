@@ -1,3 +1,5 @@
+--- @since 25.2.7
+
 local shell = os.getenv("SHELL"):match(".*/(.*)")
 local fail = function(s, ...) ya.notify { title = "fdp", content = string.format(s, ...), timeout = 5, level = "error" } end
 
