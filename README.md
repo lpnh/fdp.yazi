@@ -3,7 +3,7 @@
 > [!NOTE]
 > this plugin is only guaranteed to be compatible with Yazi nightly
 
-a Yazi plugin that integrates `fzf` and `fd` with `eza` and `bat` previews
+a Yazi plugin that integrates `fzf` and `fd`, with `eza` and `bat` previews
 
 **supports**: `bash`, `fish`, and `zsh`
 
@@ -22,39 +22,48 @@ ya pack -a lpnh/fdp
 
 ## usage
 
-there are four different arguments available for this plugin
+### plugin args
+
+this plugin supports four arguments:
 
 - `cwd`: limits the search to the current directory
-- `all`: searches for both files and directories, adding `..` and `.` to the selection
+- `all`: searches for both files and directories
 - `dir`: searches for directories only
 - `file`: searches for files only
 
-here's an example of how to set them in the `~/.config/yazi/keymap.toml` file:
+below is an example of how to configure them in the
+`~/.config/yazi/keymap.toml` file:
 
 ```toml
 [[manager.prepend_keymap]]
 on = ["f", "a"]
-run = "plugin fdp --args='all'"
-desc = "fd with preview (all)"
+run = "plugin fdp all"
+desc = "fd search (all)"
 
 [[manager.prepend_keymap]]
 on = ["f", "c"]
-run = "plugin fdp --args='cwd'"
-desc = "fd with preview (CWD only)"
+run = "plugin fdp cwd"
+desc = "fd search (CWD)"
 
 [[manager.prepend_keymap]]
 on = ["f", "d"]
-run = "plugin fdp --args='dir'"
-desc = "fd with preview (dirs only)"
+run = "plugin fdp dir"
+desc = "fd search (dirs)"
 
 [[manager.prepend_keymap]]
 on = ["f", "f"]
-run = "plugin fdp --args='file'"
-desc = "fd with preview (files only)"
+run = "plugin fdp file"
+desc = "fd search (files)"
 ```
 
-**bonus:** `<ctrl-space>` switches the preview to display metadata from `eza`
-for the selected entry
+### fzf binds
+
+this plugin provides the four custom `fzf` keybindings:
+
+- `<ctrl-f>`: toggle `fzf` match search for the current query results
+- `<ctrl-w>`: toggle the preview window size (66%, 80%)
+- `<ctrl-\>`: toggle the preview window position (top, right)
+- `<ctrl-space>`: display metadata from `eza` for the selected entry
 
 ## acknowledgments
 
