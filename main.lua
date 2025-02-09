@@ -1,4 +1,19 @@
 local shell = os.getenv("SHELL"):match(".*/(.*)")
+local fail = function(s, ...) ya.notify { title = "fdp", content = string.format(s, ...), timeout = 5, level = "error" } end
+
+-- shell compatibility
+local sh_compat = {
+	default = {
+		wrap_cmd = function(cmd) return "(" .. cmd .. ")" end,
+		logic = { cond = "[[ ! $FZF_PROMPT =~ fd ]] &&", op = "||" },
+	},
+	fish = {
+		wrap_cmd = function(cmd) return "begin; " .. cmd .. "; end" end,
+		logic = { cond = 'not string match -q "*fd*" $FZF_PROMPT; and', op = "; or" },
+	},
+}
+local function shell_helper() return sh_compat[shell] or sh_compat.default end
+local sh = shell_helper()
 
 -- mimic bat grid,header style
 local bar =
@@ -10,36 +25,28 @@ local is_empty_dir = [[test -z "$(eza -A {})" && echo -ne "  <EMPTY>\n" || ]]
 local echo_meta =
 	[[test -d {} && echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m  <METADATA>" || echo -ne "File: \x1b[1m\x1b[38m{}\x1b[m  <METADATA>";]]
 
--- bat preview
+-- preview
 local bat_prev = "bat --color=always --style=grid,header {}'"
-
--- eza preview
 local eza_flags =
 	" --git --git-repos --header --long --mounts --no-user --octal-permissions --total-size --color=always --icons {} "
 local eza_cmd = "eza --group-directories-first" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g";]]
-local eza_tbl = {
-	default = "(" .. bar .. dir_name .. is_empty_dir .. bar_n .. eza_cmd .. bar .. ")",
-	fish = "begin; " .. bar .. dir_name .. is_empty_dir .. bar_n .. eza_cmd .. bar .. " end",
-}
-local eza_prev = eza_tbl[shell] or eza_tbl.default
+local header = bar .. dir_name .. is_empty_dir .. bar_n .. eza_cmd .. bar
+local eza_prev = sh.wrap_cmd(header)
 
--- ctrl-space metadata preview
+-- bind metadata preview
 local eza_list_dirs = "eza --list-dirs" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g"']]
-local eza_bind_prev = "--bind 'ctrl-space:preview:" .. bar .. echo_meta .. bar_n .. eza_list_dirs
+local bind_meta_prev = "--bind 'ctrl-space:preview:" .. bar .. echo_meta .. bar_n .. eza_list_dirs
+
+-- bind toggle fzf match
+local bind_match_tmpl = "--bind='ctrl-f:transform:%s "
+	.. [[echo "rebind(change)+change-prompt(fd> )+clear-query+reload:%s" %s ]]
+	.. [[echo "unbind(change)+change-prompt(fzf> )+clear-query"']]
 
 -- fzf
 local fzf_from = function(job_args)
-	local fd_all_tbl = {
-		default = [[(fd --type=d {q}; fd --type=f {q})]],
-		fish = "begin; fd --type=d {q}; fd --type=f {q}; end",
-	}
-	local fd_cwd_tbl = {
-		default = [[(fd --max-depth=1 --type=d {q}; fd --max-depth=1 --type=f {q})]],
-		fish = "begin; fd --max-depth=1 --type=d {q}; fd --max-depth=1 --type=f {q}; end",
-	}
 	local cmd_tbl = {
-		all = fd_all_tbl[shell] or fd_all_tbl.default,
-		cwd = fd_cwd_tbl[shell] or fd_cwd_tbl.default,
+		all = sh.wrap_cmd("fd --type=d {q}; fd --type=f {q}"),
+		cwd = sh.wrap_cmd("fd --max-depth=1 --type=d {q}; fd --max-depth=1 --type=f {q}"),
 		dir = "fd --type=dir {q}",
 		file = "fd --type=file {q}",
 	}
@@ -57,28 +64,13 @@ local fzf_from = function(job_args)
 		string.format("--bind='change:reload:sleep 0.1; %s || true'", fd_cmd),
 		"--bind='ctrl-w:change-preview-window(80%|66%)'",
 		"--bind='ctrl-\\:change-preview-window(right|up)'",
-		eza_bind_prev,
+		bind_meta_prev,
+		string.format(bind_match_tmpl, sh.logic.cond, fd_cmd, sh.logic.op, fd_cmd),
 		-- opts_tbl.fzf,
 	}
 
-	local extra = function(cmd)
-		local logic = {
-			default = { cond = "[[ ! $FZF_PROMPT =~ fd ]] &&", op = "||" },
-			fish = { cond = 'not string match -q "*fd*" $FZF_PROMPT; and', op = "; or" },
-		}
-		local lgc = logic[shell] or logic.default
-		local extra_bind = "--bind='ctrl-f:transform:%s "
-			.. [[echo "rebind(change)+change-prompt(fd> )+clear-query+reload:%s" %s ]]
-			.. [[echo "unbind(change)+change-prompt(fzf> )+clear-query"']]
-		return string.format(extra_bind, lgc.cond, cmd, lgc.op, cmd)
-	end
-
-	table.insert(fzf_tbl, extra(fd_cmd))
-
 	return table.concat(fzf_tbl, " ")
 end
-
-local fail = function(s, ...) ya.notify { title = "fdp", content = string.format(s, ...), timeout = 5, level = "error" } end
 
 local function entry(_, job)
 	local _permit = ya.hide()
