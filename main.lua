@@ -28,7 +28,7 @@ local echo_meta =
 	[[test -d {} && echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m  <METADATA>" || echo -ne "File: \x1b[1m\x1b[38m{}\x1b[m  <METADATA>";]]
 
 -- preview
-local bat_prev = "bat --color=always --style=grid,header {}'"
+local bat_prev = "bat --color=always --style=grid,header {}"
 local eza_flags =
 	" --git --git-repos --header --long --mounts --no-user --octal-permissions --total-size --color=always --icons {} "
 local eza_cmd = "eza --group-directories-first" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g";]]
@@ -36,8 +36,8 @@ local header = bar .. dir_name .. is_empty_dir .. bar_n .. eza_cmd .. bar
 local eza_prev = sh.wrap_cmd(header)
 
 -- bind metadata preview
-local eza_list_dirs = "eza --list-dirs" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g"']]
-local bind_meta_prev = "--bind 'ctrl-space:preview:" .. bar .. echo_meta .. bar_n .. eza_list_dirs
+local eza_list_dirs = "eza --list-dirs" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g"]]
+local bind_meta_prev = string.format("--bind 'ctrl-space:preview:%s'", bar .. echo_meta .. bar_n .. eza_list_dirs)
 
 -- bind toggle fzf match
 local bind_match_tmpl = "--bind='ctrl-f:transform:%s "
@@ -61,13 +61,13 @@ local fzf_from = function(job_args)
 		"--reverse",
 		"--prompt='fd> '",
 		"--preview-window=up,66%",
-		"--preview='test -d {} && " .. eza_prev .. " || " .. bat_prev,
+		string.format("--preview='test -d {} && %s || %s'", eza_prev, bat_prev),
 		string.format("--bind='start:reload:%s'", fd_cmd),
 		string.format("--bind='change:reload:sleep 0.1; %s || true'", fd_cmd),
 		"--bind='ctrl-w:change-preview-window(80%|66%)'",
 		"--bind='ctrl-\\:change-preview-window(right|up)'",
 		bind_meta_prev,
-		string.format(bind_match_tmpl, sh.logic.cond, fd_cmd, sh.logic.op, fd_cmd),
+		string.format(bind_match_tmpl, sh.logic.cond, fd_cmd, sh.logic.op),
 		-- opts_tbl.fzf,
 	}
 
