@@ -58,12 +58,13 @@ desc = "fd search (files)"
 
 ### fzf binds
 
-this plugin provides four custom `fzf` keybindings:
+this plugin provides the following custom `fzf` keybindings:
 
-- `<ctrl-f>`: toggle `fzf` match search for the current query results
-- `<ctrl-w>`: toggle the preview window size (66%, 80%)
+- `<ctrl-s>`: toggle `fzf` match search for the current query results
+- `<ctrl-]>`: toggle the preview window size (66%, 80%)
 - `<ctrl-\>`: toggle the preview window position (top, right)
-- `<ctrl-space>`: display metadata from `eza` for the selected entry
+- `<alt-m>`: change the preview to "metadata" (`eza -ld`)
+- `<alt-c>`: change the preview to "content" (default)
 
 ## customization
 

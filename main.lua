@@ -24,8 +24,7 @@ local bar_n =
 	[[echo -e "\n\x1b[38;2;148;130;158m────────────────────────────────────────────────────────────────────────────────\x1b[m";]]
 local dir_name = [[echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m";]]
 local is_empty_dir = [[test -z "$(eza -A {})" && echo -ne "  <EMPTY>\n" || ]]
-local echo_meta =
-	[[test -d {} && echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m  <METADATA>" || echo -ne "File: \x1b[1m\x1b[38m{}\x1b[m  <METADATA>";]]
+local echo_meta = [[test -d {} && echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m" || echo -ne "File: \x1b[1m\x1b[38m{}\x1b[m";]]
 
 -- preview
 local bat_prev = "bat --color=always --style=grid,header {}"
@@ -34,13 +33,16 @@ local eza_flags =
 local eza_cmd = "eza --group-directories-first" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g";]]
 local header = bar .. dir_name .. is_empty_dir .. bar_n .. eza_cmd .. bar
 local eza_prev = sh.wrap_cmd(header)
+local default_prev = string.format("test -d {} && %s || %s", eza_prev, bat_prev)
+local eza_list_dirs = "eza --list-dirs" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g";]]
+local meta_prev = bar .. echo_meta .. bar_n .. eza_list_dirs .. bar
 
--- bind metadata preview
-local eza_list_dirs = "eza --list-dirs" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g"]]
-local bind_meta_prev = string.format("--bind 'ctrl-space:preview:%s'", bar .. echo_meta .. bar_n .. eza_list_dirs)
+-- bind preview
+local bind_default_prev = string.format("--bind 'alt-c:change-preview-label(content)+change-preview:%s'", default_prev)
+local bind_meta_prev = string.format("--bind 'alt-m:change-preview-label(metadata)+change-preview:%s'", meta_prev)
 
 -- bind toggle fzf match
-local bind_match_tmpl = "--bind='ctrl-f:transform:%s "
+local bind_match_tmpl = "--bind='ctrl-s:transform:%s "
 	.. [[echo "rebind(change)+change-prompt(fd> )+clear-query+reload:%s" %s ]]
 	.. [[echo "unbind(change)+change-prompt(fzf> )+clear-query"']]
 
@@ -59,13 +61,15 @@ local fzf_from = function(job_args)
 		"--no-multi",
 		"--no-sort",
 		"--reverse",
+		"--preview-label='content'",
 		"--prompt='fd> '",
 		"--preview-window=up,66%",
-		string.format("--preview='test -d {} && %s || %s'", eza_prev, bat_prev),
+		string.format("--preview='%s'", default_prev),
 		string.format("--bind='start:reload:%s'", fd_cmd),
 		string.format("--bind='change:reload:sleep 0.1; %s || true'", fd_cmd),
-		"--bind='ctrl-w:change-preview-window(80%|66%)'",
+		"--bind='ctrl-]:change-preview-window(80%|66%)'",
 		"--bind='ctrl-\\:change-preview-window(right|up)'",
+		bind_default_prev,
 		bind_meta_prev,
 		string.format(bind_match_tmpl, sh.logic.cond, fd_cmd, sh.logic.op),
 		-- opts_tbl.fzf,
