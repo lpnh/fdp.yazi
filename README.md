@@ -58,13 +58,25 @@ desc = "fd search (files)"
 
 ### fzf binds
 
-this plugin provides the four custom `fzf` keybindings:
+this plugin provides four custom `fzf` keybindings:
 
 - `<ctrl-f>`: toggle `fzf` match search for the current query results
 - `<ctrl-w>`: toggle the preview window size (66%, 80%)
 - `<ctrl-\>`: toggle the preview window position (top, right)
 - `<ctrl-space>`: display metadata from `eza` for the selected entry
 
+## customization
+
+### color themes
+
+you can customize the default `fzf` colors using the `FZF_DEFAULT_OPTS`
+environment variable. for an example, check out [Catppuccin's fzf
+repo](https://github.com/catppuccin/fzf?tab=readme-ov-file#usage)
+
+more examples of color themes can be found in the [fzf
+documentation](https://github.com/junegunn/fzf/blob/master/ADVANCED.md#color-themes)
+
 ## acknowledgments
 
-@prosoitos for the [inspiration](https://github.com/sxyazi/yazi/discussions/2273)
+thanks @prosoitos for the
+[inspiration](https://github.com/sxyazi/yazi/discussions/2273)
