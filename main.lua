@@ -23,19 +23,23 @@ local bar =
 local bar_n =
 	[[echo -e "\n\x1b[38;2;148;130;158m────────────────────────────────────────────────────────────────────────────────\x1b[m";]]
 local dir_name = [[echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m";]]
+local dir_or_file_name = "test -d {}"
+	.. [[ && echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m"]]
+	.. [[ || echo -ne "File: \x1b[1m\x1b[38m{}\x1b[m";]]
 local is_empty_dir = [[test -z "$(eza -A {})" && echo -ne "  <EMPTY>\n" || ]]
-local echo_meta = [[test -d {} && echo -ne "Dir: \x1b[1m\x1b[38m{}\x1b[m" || echo -ne "File: \x1b[1m\x1b[38m{}\x1b[m";]]
 
--- preview
+-- default preview
 local bat_prev = "bat --color=always --style=grid,header {}"
-local eza_flags =
-	" --git --git-repos --header --long --mounts --no-user --octal-permissions --total-size --color=always --icons {} "
-local eza_cmd = "eza --group-directories-first" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g";]]
-local header = bar .. dir_name .. is_empty_dir .. bar_n .. eza_cmd .. bar
-local eza_prev = sh.wrap_cmd(header)
+local eza_cmd_tail = " --color=always --group-directories-first --icons {};"
+local eza_header_tmpl = bar .. "%s" .. is_empty_dir .. bar_n .. "%s" .. bar
+local eza_prev = sh.wrap_cmd(string.format(eza_header_tmpl, dir_name, "eza --oneline" .. eza_cmd_tail))
 local default_prev = string.format("test -d {} && %s || %s", eza_prev, bat_prev)
-local eza_list_dirs = "eza --list-dirs" .. eza_flags .. [[ | sed "s/\x1b\[4m//g; s/\x1b\[24m//g";]]
-local meta_prev = bar .. echo_meta .. bar_n .. eza_list_dirs .. bar
+
+-- meta preview
+local eza_meta_cmd = "eza "
+	.. "--git --git-repos --header --long --mounts --no-user --octal-permissions --total-size"
+	.. eza_cmd_tail
+local meta_prev = string.format(eza_header_tmpl, dir_or_file_name, eza_meta_cmd)
 
 -- bind preview
 local bind_default_prev = string.format("--bind 'alt-c:change-preview-label(content)+change-preview:%s'", default_prev)
