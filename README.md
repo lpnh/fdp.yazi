@@ -70,12 +70,24 @@ this plugin provides the following custom `fzf` keybindings:
 
 ### color themes
 
+#### fzf
+
 you can customize the default `fzf` colors using the `FZF_DEFAULT_OPTS`
 environment variable. for an example, check out [Catppuccin's fzf
 repo](https://github.com/catppuccin/fzf?tab=readme-ov-file#usage)
 
 more examples of color themes can be found in the [fzf
 documentation](https://github.com/junegunn/fzf/blob/master/ADVANCED.md#color-themes)
+
+#### eza
+
+you can customize the colors of `eza` previews using its
+`~/.config/eza/theme.yml` configuration file. check the
+[eza-theme](https://github.com/eza-community/eza-themes) repository for some
+existing themes
+
+for more details, see
+[eza_colors-explanation](https://github.com/eza-community/eza/blob/main/man/eza_colors-explanation.5.md)
 
 ## acknowledgments
 
